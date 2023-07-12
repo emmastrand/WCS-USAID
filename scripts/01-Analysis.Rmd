@@ -1,0 +1,139 @@
+---
+title: "WCS USAID Project Analysis"
+author: "Author: Emma Strand; https://linktr.ee/emmastrand"
+output:
+  github_document: default
+  pdf_document:
+    keep_tex: yes
+  html_document:
+    toc: yes
+    toc_depth: 6
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## <a name="libraries"></a> **Load all libraries**
+
+```{r, message=FALSE, warning=FALSE}
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(lubridate)
+library(Hmisc)
+library(writexl)
+library(naniar)
+```
+
+## Import dataset 
+
+```{r}
+## when running future iterations of raw data file, replace the file name below 
+data <- read_excel("data/LengthData_20230712.xlsx", sheet = "Clean_data",
+                                col_types = c("date", "text", "text", "text", "text", 
+                                              "text", "text", "numeric", "numeric", "text",
+                                              "text", "numeric", "numeric", "numeric")) %>%
+  dplyr::rename(Weight_kg = `Weight(Kg)`) %>% dplyr::rename(Weight_g = `Weight( Grams`)
+
+nrow(data) ## 957 20230712 download from google drive 
+```
+
+### Cleaning dataset 
+
+**Month and Year**
+
+```{r}
+#unique(data$Month) 
+## "Sept"      "September" "Oct"       "October"   "August"    "November" 
+
+## changing all Sept and Oct entries to read September and October 
+## $ indicates end of a phrase; otherwise all 'Sept' in 'September' would also be changed 
+data <- data %>%
+  mutate(Month = gsub("Sept$", "September", Month),
+         Month = gsub("Oct$", "October", Month))
+
+unique(data$Month) 
+## end result 
+# "September" "October"   "August"    "November" 
+
+unique(data$Year) ## all 2022 
+```
+
+**Landing site**
+
+```{r}
+unique(data$`Landing Site`)
+```
+
+**Date Collector** 
+
+```{r}
+unique(data$`Data Collector`)
+```
+
+**Group** 
+
+```{r}
+unique(data$Group)
+```
+
+**Fishing Gear** 
+
+```{r}
+data <- data %>%
+  mutate(Fishgear = gsub("SG/HS", "HS/SG", Fishgear),
+         Fishgear = gsub("ringnet", "Ring net", Fishgear),
+         Fishgear = gsub("reefseine", "Reef seine", Fishgear),
+         Fishgear = gsub("Reefseine", "Reef seine", Fishgear),
+         Fishgear = gsub("Ringnet", "Ring net", Fishgear),
+         Fishgear = gsub("Reef net", "Reef Net", Fishgear),
+         Fishgear = gsub("speargun", "Speargun", Fishgear),
+         Fishgear = gsub("reefsen", "Reef seine", Fishgear),
+         Fishgear = gsub("Handline", "Hand line", Fishgear),
+         Fishgear = gsub("monofilament", "Monofilament", Fishgear))
+
+unique(data$Fishgear)
+```
+
+**# Boats and Fishers** 
+
+```{r}
+range(data$`# Boats`) ##0-2
+hist(data$`#Fishers`) ##1-35
+hist(data$Length) ## 7.6 - 61.5 
+hist(data$Weight_kg) ## 0 - 1.113
+
+data <- data %>%
+  ## changing all NA's to zero in Weight_g column 
+  mutate(Weight_g = coalesce(Weight_g, 0)) 
+
+hist(data$Weight_g) ## 0 - 1113 
+```
+**Fish ID** 
+
+```{r}
+unique(data$Family)
+unique(data$Species)
+```
+
+This dataset was pretty clean prior to me starting analyses! 
+
+Exporting my clean set 
+
+```{r}
+data %>% write_xlsx("data/LengthData_20230712_EScleaned.xlsx")
+```
+
+
+## Length based summary 
+
+
+
+
+
