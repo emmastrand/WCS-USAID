@@ -31,7 +31,11 @@ library(writexl)
 library(naniar)
 ```
 
+# Quality Control 
+
 ## Import dataset 
+
+The google drive version shared via WCS USAID google drive folder has several errors with month, fishing gear type, and hidden formatting in excel. For any future analyses, I recommend using the `LengthData_20230712_EScleaned` excel sheet produced from this script. 
 
 ```{r}
 ## when running future iterations of raw data file, replace the file name below 
@@ -119,7 +123,7 @@ hist(data$Weight_g) ## 0 - 1113
 
 ```{r}
 unique(data$Family)
-unique(data$Species)
+sort(unique(data$Species))
 ```
 
 This dataset was pretty clean prior to me starting analyses! 
@@ -131,8 +135,137 @@ data %>% write_xlsx("data/LengthData_20230712_EScleaned.xlsx")
 ```
 
 
-## Length based summary 
+# Length based summary 
 
+Importing Galligan dataset from our Kenya project. Can also be found here: https://github.com/emmastrand/Kenya_SamakiSalama/blob/main/FishLandings/data/SpeciesData_GatedTraps_Galligan_edited.csv. 
+
+```{r}
+galligan <- read.csv('data/SpeciesData_GatedTraps_Galligan_expanded.csv', header=TRUE, sep = ",") %>%
+  dplyr::select(-Family)
+## 261 species included in the above sheet 
+
+data2 <- left_join(data, galligan, by = c("Species"))  
+nrow(data2) ## should be 957- this should be match the original number b/c we haven't removed any data 
+```
+
+Checking for species not found in Galligan extended that were found in the larger dataset: 
+
+```{r}
+data2 %>% filter(is.na(Lmat_cm)) %>% dplyr::select(Species) %>% distinct()
+## output should be zero 
+```
+
+### 1. Calculating L:Lopt and L:Lmat Ratios for each fish caught 
+
+```{r}
+data2 <- data2 %>%
+  mutate(Lopt_ratio = Length/Lopt_cm,
+         Lmat_ratio = Length/Lmat_cm)
+
+## checking range and hist of each ratio 
+hist(data2$Lopt_ratio) ## range = 0.2074522 3.5000000
+hist(data2$Lmat_ratio) ## range = 0.2672897 3.1111111
+```
+
+### 2. Calculating Spawning Potential Ratio 
+
+#### 2.1 Prepare dataframes
+
+To use the package in step 2.2, we need each species to have a single dataframe with only length values 
+
+```{r}
+#unique(data2$Species) ## 102 species ; 71 with > 3 observations 
+
+data2 %>% 
+  ## creating a dataframe for only length values 
+  dplyr::select(Species, Length) %>% group_by(Species) %>%
+  
+  ## for those species with above a catch count of 3 
+  mutate(sample_size = n()) %>% ungroup() %>%
+  filter(!sample_size < 3) %>% dplyr::select(-sample_size) %>%
+  
+  ## for each Species, this function will export a csv
+  group_by(Species) %>%
+  group_walk(~ write_csv(.x, file = paste0("data/species/", .y$Species, ".csv")))
+```
+
+
+![](https://edis.ifas.ufl.edu/image/Ip82bus9fm/screen)
+
+More info here: https://edis.ifas.ufl.edu/publication/FA241. 
+
+R package to do this: https://sfg-ucsb.github.io/fishery-manageR/wrapping-up.html and https://cran.r-project.org/web/packages/LBSPR/vignettes/LBSPR.html. 
+
+#### 2.1 Install package 
+
+```{r}
+#install.packages("LBSPR")
+library(LBSPR)
+```
+
+#### 2.2 Fitting Empirical Length Data
+
+Length data is located in `data/species/` with 71 separate csv files. The goal is to calculate SPR for each species using this empirical data. 
+
+```{r}
+## create new empty objects
+MyLengths <- new("LB_lengths")
+MyPars <- new("LB_pars")
+
+## list all potential parameters
+slotNames(MyLengths)
+slotNames(MyPars)
+
+## Fill MyPars 
+MyPars@Species <- "Acanthurus dussumieri"
+MyPars@Linf <- 30.04598 
+MyPars@L50 <- 15 
+MyPars@L95 <- 40
+MyPars@MK <- 1.5 
+MyPars@L_units <- "cm"
+
+# loading folder of csv files 
+datdir <- "data/species/"
+list.files(datdir, pattern=".csv")
+
+## new length file
+Len1 <- new("LB_lengths", LB_pars=MyPars, 
+            file="data/species/Acanthurus dussumieri.csv", dataType="raw", header=TRUE)
+
+
+Shiny("LBSPR")
+Shiny("YPRSim")
+```
+
+
+
+
+
+
+
+
+
+## TropFishR package 
+
+Resources: 
+- https://sfg-ucsb.github.io/fishery-manageR/wrapping-up.html 
+
+### Installing
+
+```{r}
+install.packages("remotes")
+remotes::install_github("tokami/TropFishR")
+
+install.packages(c('TropFishR','DLMTool', 'LBSPR', 'fishmethods'))
+
+library(remotes)
+library(TropFishR)
+library(LBSPR)
+library(fishmethods)
+
+## warning says that after TropFishR is downloaded, cannot use the object 'select' from dplyr
+## might be beneficial to calculate in separate script? 
+```
 
 
 
