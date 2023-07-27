@@ -383,9 +383,9 @@ abundant_families <- data2 %>%
 
 ### 3.2 Downlaod TropFishR package
 
-Resources: -
-<https://sfg-ucsb.github.io/fishery-manageR/wrapping-up.html> -
-<https://github.com/tokami/TropFishR>  
+Resources:  
+- <https://sfg-ucsb.github.io/fishery-manageR/wrapping-up.html>  
+- <https://github.com/tokami/TropFishR>  
 - <http://cran.nexr.com/web/packages/TropFishR/vignettes/tutorial.html>
 
 #### 3.2.1 Installing and loading example data
