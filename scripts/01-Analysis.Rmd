@@ -1,6 +1,6 @@
 ---
-title: "WCS USAID Project Analysis"
-author: "Author: Emma Strand; https://linktr.ee/emmastrand"
+title: "WCS FIL Project Analysis"
+author: "Authors: Austin Humphries & Emma Strand"
 output:
   github_document: default
   pdf_document:
