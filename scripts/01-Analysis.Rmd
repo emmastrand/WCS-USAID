@@ -100,7 +100,8 @@ data <- data %>%
          Fishgear = gsub("speargun", "Speargun", Fishgear),
          Fishgear = gsub("reefsen", "Reef seine", Fishgear),
          Fishgear = gsub("Handline", "Hand line", Fishgear),
-         Fishgear = gsub("monofilament", "Monofilament", Fishgear))
+         Fishgear = gsub("monofilament", "Monofilament", Fishgear),
+         Fishgear = gsub("Monofilament", "Hand line", Fishgear))
 
 unique(data$Fishgear)
 ```
@@ -119,10 +120,14 @@ data <- data %>%
 
 hist(data$Weight_g) ## 0 - 1113 
 ```
+
 **Fish ID** 
 
 ```{r}
+## unique() outputs the name of each unique character in Family
 unique(data$Family)
+
+## sort() outputs Species in alphabetical order
 sort(unique(data$Species))
 ```
 
@@ -142,7 +147,7 @@ Importing Galligan dataset from our Kenya project. Can also be found here: https
 ```{r}
 galligan <- read.csv('data/SpeciesData_GatedTraps_Galligan_expanded.csv', header=TRUE, sep = ",") %>%
   dplyr::select(-Family)
-## 261 species included in the above sheet 
+## 260 species included in the above sheet 
 
 data2 <- left_join(data, galligan, by = c("Species"))  
 nrow(data2) ## should be 957- this should be match the original number b/c we haven't removed any data 
@@ -183,7 +188,7 @@ sample_size <- data2 %>%
   ## for those species with above a catch count of 3 
   mutate(sample_size = n()) %>% ungroup() 
   
-sample_size %>% filter(!sample_size < 3) %>% dplyr::select(-sample_size) %>%
+sample_size %>% filter(!sample_size < 15) %>% dplyr::select(-sample_size) %>%
   ## for each Species, this function will export a csv
   group_by(Species) %>%
   group_walk(~ write_csv(.x, file = paste0("data/species/", .y$Species, ".csv")))
@@ -200,7 +205,7 @@ R package to do this: https://sfg-ucsb.github.io/fishery-manageR/wrapping-up.htm
 
 ```{r}
 #install.packages("LBSPR")
-#library(LBSPR)
+library(LBSPR)
 ```
 
 ### 2.2 Fitting Empirical Length Data
