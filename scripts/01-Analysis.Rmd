@@ -1,6 +1,6 @@
 ---
 title: "WCS FIL Project Analysis"
-author: "Authors: Austin Humphries & Emma Strand"
+author: "Authors: Austin Humphries & Emma Strand; last update Aug 4, 2023"
 output:
   github_document: default
   pdf_document:
